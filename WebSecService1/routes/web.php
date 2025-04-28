@@ -14,6 +14,7 @@ use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Laravel\Socialite\Facades\Socialite;
 use App\Http\Controllers\PasswordController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
 
 Route::get('register', [UsersController::class, 'register'])->name('register');
 Route::post('register', [UsersController::class, 'doRegister'])->name('do_register');
@@ -170,4 +171,21 @@ Route::get('/auth/{provider}/redirect', function ($provider) {
 
 Route::get('/auth/{provider}/callback', 'App\Http\Controllers\Auth\SocialAuthController@callback')
     ->name('social.callback');
+
+// Password Reset Routes
+Route::get('forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])
+    ->middleware('guest')
+    ->name('password.request');
+
+Route::post('forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])
+    ->middleware('guest')
+    ->name('password.email');
+
+Route::get('reset-password/{token}', [ForgotPasswordController::class, 'showResetForm'])
+    ->middleware('guest')
+    ->name('password.reset');
+
+Route::post('reset-password', [ForgotPasswordController::class, 'reset'])
+    ->middleware('guest')
+    ->name('password.update');
 
