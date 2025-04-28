@@ -28,7 +28,12 @@
     </div>
   </div>
 </div>
-<div>
-    <a href="{{ url('auth/google') }}">Login with Google</a>
+<div class="d-flex justify-content-center gap-3">
+    <a href="{{ url('auth/google') }}" class="btn btn-outline-danger">
+        <i class="fab fa-google"></i> Login with Google
+    </a>
+    <a href="{{ url('auth/github') }}" class="btn btn-outline-dark">
+        <i class="fab fa-github"></i> Login with GitHub
+    </a>
 </div>
 @endsection

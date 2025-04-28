@@ -8,9 +8,11 @@ use App\Http\Controllers\UserCreditController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ProductLikeController;
 use App\Http\Controllers\GoogleController;
+use App\Http\Controllers\GithubAuthController;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Laravel\Socialite\Facades\Socialite;
 
 Route::get('register', [UsersController::class, 'register'])->name('register');
 Route::post('register', [UsersController::class, 'doRegister'])->name('do_register');
@@ -95,6 +97,10 @@ Route::middleware(['auth'])->group(function () {
 Route::get('auth/google', [GoogleController::class, 'redirectToGoogle'])->name('google.login');
 Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallback'])->name('google.callback');
 
+// GitHub Authentication Routes
+Route::get('auth/github', [GithubAuthController::class, 'redirect'])->name('github.login');
+Route::get('auth/github/callback', [GithubAuthController::class, 'callback'])->name('github.callback');
+
 // Email Verification Routes
 Route::middleware(['auth'])->group(function () {
     Route::get('/email/verify', function () {
@@ -153,4 +159,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('employees', EmployeeController::class);
     });
 });
+
+Route::get('/auth/{provider}/redirect', function ($provider) {
+    return Socialite::driver($provider)->redirect();
+})->name('social.redirect');
+
+Route::get('/auth/{provider}/callback', 'App\Http\Controllers\Auth\SocialAuthController@callback')
+    ->name('social.callback');
 
