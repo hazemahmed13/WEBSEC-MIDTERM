@@ -9,6 +9,8 @@ use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Support\Facades\Hash;
+use Carbon\Carbon;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -28,6 +30,10 @@ class User extends Authenticatable implements MustVerifyEmail
         'email_verified_at',
         'provider',
         'provider_id',
+        'last_password_change',
+        'failed_login_attempts',
+        'last_failed_login',
+        'is_locked',
     ];
 
     /**
@@ -48,6 +54,9 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'last_password_change' => 'datetime',
+        'last_failed_login' => 'datetime',
+        'is_locked' => 'boolean',
     ];
 
     public function credit()
@@ -119,6 +128,101 @@ class User extends Authenticatable implements MustVerifyEmail
         });
     }
 
+    /**
+     * Check if password needs to be changed (older than 90 days)
+     */
+    public function passwordNeedsChange(): bool
+    {
+        if (!$this->last_password_change) {
+            return true;
+        }
+        return $this->last_password_change->addDays(90)->isPast();
+    }
+
+    /**
+     * Update password with security checks
+     */
+    public function updatePassword(string $newPassword): bool
+    {
+        // Check password complexity
+        if (!$this->isPasswordComplex($newPassword)) {
+            return false;
+        }
+
+        // Check if password was used before
+        if ($this->wasPasswordUsedBefore($newPassword)) {
+            return false;
+        }
+
+        $this->password = Hash::make($newPassword);
+        $this->last_password_change = now();
+        return $this->save();
+    }
+
+    /**
+     * Check password complexity
+     */
+    protected function isPasswordComplex(string $password): bool
+    {
+        return strlen($password) >= 12 &&
+               preg_match('/[A-Z]/', $password) &&
+               preg_match('/[a-z]/', $password) &&
+               preg_match('/[0-9]/', $password) &&
+               preg_match('/[^A-Za-z0-9]/', $password);
+    }
+
+    /**
+     * Check if password was used before
+     */
+    protected function wasPasswordUsedBefore(string $password): bool
+    {
+        // Implementation would require a password_history table
+        return false;
+    }
+
+    /**
+     * Handle failed login attempt
+     */
+    public function handleFailedLogin(): void
+    {
+        $this->failed_login_attempts = ($this->failed_login_attempts ?? 0) + 1;
+        $this->last_failed_login = now();
+        
+        if ($this->failed_login_attempts >= 5) {
+            $this->is_locked = true;
+        }
+        
+        $this->save();
+    }
+
+    /**
+     * Reset failed login attempts
+     */
+    public function resetFailedLoginAttempts(): void
+    {
+        $this->failed_login_attempts = 0;
+        $this->is_locked = false;
+        $this->save();
+    }
+
+    /**
+     * Check if account is locked
+     */
+    public function isLocked(): bool
+    {
+        if (!$this->is_locked) {
+            return false;
+        }
+
+        // Auto unlock after 30 minutes
+        if ($this->last_failed_login->addMinutes(30)->isPast()) {
+            $this->resetFailedLoginAttempts();
+            return false;
+        }
+
+        return true;
+    }
+
     protected static function boot()
     {
         parent::boot();
@@ -127,6 +231,10 @@ class User extends Authenticatable implements MustVerifyEmail
             if ($user->email === 'admin@example.com') {
                 $user->assignRole('admin');
             }
+            // Initialize security-related fields
+            $user->last_password_change = now();
+            $user->failed_login_attempts = 0;
+            $user->is_locked = false;
         });
     }
 }
