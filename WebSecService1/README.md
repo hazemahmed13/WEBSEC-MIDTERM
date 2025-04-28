@@ -64,3 +64,31 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Project Information
+
+This is a Web Security Service project developed using Laravel framework. The project focuses on implementing various security features and best practices.
+
+### Features
+- User authentication and authorization
+- Secure data handling
+- Input validation
+- CSRF protection
+- XSS prevention
+- SQL injection protection
+
+### Installation
+1. Clone the repository
+2. Run `composer install`
+3. Copy `.env.example` to `.env`
+4. Generate application key: `php artisan key:generate`
+5. Configure your database in `.env`
+6. Run migrations: `php artisan migrate`
+7. Start the development server: `php artisan serve`
+
+### Security Features
+- Password hashing using bcrypt
+- Session management
+- Secure headers
+- Rate limiting
+- Input sanitization
