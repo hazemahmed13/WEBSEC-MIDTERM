@@ -13,6 +13,7 @@ use Illuminate\Auth\Events\Verified;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Laravel\Socialite\Facades\Socialite;
+use App\Http\Controllers\PasswordController;
 
 Route::get('register', [UsersController::class, 'register'])->name('register');
 Route::post('register', [UsersController::class, 'doRegister'])->name('do_register');
@@ -91,6 +92,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/products/{product}/like', [ProductLikeController::class, 'toggleLike'])
         ->name('products.like')
         ->middleware('auth');
+
+    Route::get('/password/change', [PasswordController::class, 'showChangeForm'])->name('password.change');
+    Route::post('/password/update', [PasswordController::class, 'update'])->name('password.update');
 });
 
 // Google Authentication Routes
