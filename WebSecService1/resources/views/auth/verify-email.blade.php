@@ -1,46 +1,24 @@
 @extends('layouts.master')
 @section('title', 'Verify Email')
 @section('content')
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">{{ __('Verify Your Email Address') }}</div>
-
-                <div class="card-body">
-                    @if (session('success'))
-                        <div class="alert alert-success" role="alert">
-                            {{ session('success') }}
-                        </div>
-                    @endif
-
-                    @if (session('error'))
-                        <div class="alert alert-danger" role="alert">
-                            {{ session('error') }}
-                        </div>
-                    @endif
-
-                    <div class="alert alert-info">
-                        {{ __('Thanks for signing up! Before getting started, could you verify your email address by clicking on the link we just emailed to you? If you didn\'t receive the email, we will gladly send you another.') }}
-                    </div>
-
-                    <div class="mt-4">
-                        <form method="POST" action="{{ route('verification.send') }}" class="d-inline">
-                            @csrf
-                            <button type="submit" class="btn btn-primary">
-                                {{ __('Resend Verification Email') }}
-                            </button>
-                        </form>
-
-                        <form method="POST" action="{{ route('logout') }}" class="d-inline ms-2">
-                            @csrf
-                            <button type="submit" class="btn btn-secondary">
-                                {{ __('Log Out') }}
-                            </button>
-                        </form>
-                    </div>
+<div class="d-flex justify-content-center">
+    <div class="card m-4 col-sm-6">
+        <div class="card-body">
+            <h4 class="card-title">Verify Your Email Address</h4>
+            
+            @if (session('resent'))
+                <div class="alert alert-success" role="alert">
+                    A fresh verification link has been sent to your email address.
                 </div>
-            </div>
+            @endif
+
+            <p>Before proceeding, please check your email for a verification link.</p>
+            <p>If you did not receive the email,</p>
+            
+            <form class="d-inline" method="POST" action="{{ route('verification.send') }}">
+                @csrf
+                <button type="submit" class="btn btn-link p-0 m-0 align-baseline">click here to request another</button>.
+            </form>
         </div>
     </div>
 </div>

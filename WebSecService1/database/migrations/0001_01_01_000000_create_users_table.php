@@ -17,6 +17,12 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->string('provider')->nullable();
+            $table->string('provider_id')->nullable();
+            $table->timestamp('last_password_change')->nullable();
+            $table->integer('failed_login_attempts')->default(0);
+            $table->timestamp('last_failed_login')->nullable();
+            $table->boolean('is_locked')->default(false);
             $table->rememberToken();
             $table->timestamps();
         });

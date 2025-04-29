@@ -2,16 +2,17 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 use Laravel\Sanctum\HasApiTokens;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 use App\Notifications\ResetPasswordNotification;
+use App\Notifications\VerifyEmailNotification;
+use Illuminate\Support\Facades\Cache;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -60,6 +61,9 @@ class User extends Authenticatable implements MustVerifyEmail
         'is_locked' => 'boolean',
     ];
 
+    // Add eager loading for commonly accessed relationships
+    protected $with = ['credit'];
+
     public function credit()
     {
         return $this->hasOne(UserCredit::class);
@@ -72,11 +76,13 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function getCreditBalance()
     {
-        if (!$this->credit) {
-            $this->credit()->create(['credit_balance' => 0]);
-            $this->refresh();
-        }
-        return $this->credit->credit_balance;
+        return Cache::remember('user_credit_'.$this->id, 60, function () {
+            if (!$this->credit) {
+                $this->credit()->create(['credit_balance' => 0]);
+                $this->refresh();
+            }
+            return $this->credit->credit_balance;
+        });
     }
 
     public function addCredit($amount)
@@ -233,6 +239,16 @@ class User extends Authenticatable implements MustVerifyEmail
     public function sendPasswordResetNotification($token)
     {
         $this->notify(new ResetPasswordNotification($token));
+    }
+
+    /**
+     * Send the email verification notification.
+     *
+     * @return void
+     */
+    public function sendEmailVerificationNotification()
+    {
+        $this->notify(new VerifyEmailNotification);
     }
 
     protected static function boot()

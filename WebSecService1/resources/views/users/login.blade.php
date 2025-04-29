@@ -23,6 +23,7 @@
       </div>
       <div class="form-group mb-2">
         <button type="submit" class="btn btn-primary">Login</button>
+        <a href="{{ route('password.request') }}" class="btn btn-link">Forgot Password?</a>
       </div>
     </form>
     </div>
@@ -34,6 +35,9 @@
     </a>
     <a href="{{ url('auth/github') }}" class="btn btn-outline-dark">
         <i class="fab fa-github"></i> Login with GitHub
+    </a>
+    <a href="{{ url('auth/facebook') }}" class="btn btn-outline-primary">
+        <i class="fab fa-facebook"></i> Login with Facebook
     </a>
 </div>
 @endsection

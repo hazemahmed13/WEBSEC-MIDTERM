@@ -47,23 +47,33 @@ class UsersController extends Controller {
                 ->withErrors('Invalid registration information.');
         }
 
-        $user = new User();
-        $user->name = $request->name;
-        $user->email = $request->email;
-        $user->password = bcrypt($request->password);
-        $user->save();
+        DB::beginTransaction();
+        try {
+            $user = new User();
+            $user->name = $request->name;
+            $user->email = $request->email;
+            $user->password = bcrypt($request->password);
+            $user->save();
 
-        // Assign customer role by default
-        $user->assignRole('customer');
+            // Assign customer role by default
+            $user->assignRole('customer');
 
-        // Log the user in
-        Auth::login($user);
+            // Create initial credit balance
+            $user->credit()->create(['credit_balance' => 0]);
 
-        // Send verification email
-        $user->sendEmailVerificationNotification();
+            DB::commit();
 
-        return redirect()->route('verification.notice')
-            ->with('success', 'Registration successful! Please check your email for verification link.');
+            // Log the user in
+            Auth::login($user);
+
+            return redirect('/')->with('success', 'Registration successful! Welcome to our platform.');
+                
+        } catch (\Exception $e) {
+            DB::rollback();
+            return redirect()->back()
+                ->withInput($request->input())
+                ->withErrors('Registration failed. Please try again.');
+        }
     }
 
     public function login(Request $request) {
